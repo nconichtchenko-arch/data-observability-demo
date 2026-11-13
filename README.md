@@ -14,6 +14,7 @@ Pet-проект: мониторинг пайплайнов Apache Airflow на 
 ![Dashboard Table](assets/dashboard_table.png)
 
 **4. Алертинг: письмо о падении пайплайна:**
+
 ![Email Alert](assets/email_alert.png)
 
 ## 🎯 Зачем это
