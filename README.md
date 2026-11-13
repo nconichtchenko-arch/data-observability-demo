@@ -5,12 +5,15 @@ Pet-проект: мониторинг пайплайнов Apache Airflow на 
 ## 📸 Скриншоты
 
 **1. Общие метрики и статусы задач по DAG'ам:**
+
 ![Dashboard Metrics](assets/dashboard_metrics.png)
 
 **2. Топ ошибок:**
+
 ![Dashboard Errors](assets/dashboard_errors.png)
 
 **3. Детальные данные по задачам:**
+
 ![Dashboard Table](assets/dashboard_table.png)
 
 **4. Алертинг: письмо о падении пайплайна:**
