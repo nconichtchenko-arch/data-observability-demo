@@ -5,20 +5,20 @@ Pet-проект: мониторинг пайплайнов Apache Airflow на 
 ## 📸 Скриншоты
 
 **1. Общие метрики и статусы задач по DAG'ам:**
-
 ![Dashboard Metrics](assets/dashboard_metrics.png)
 
 **2. Топ ошибок:**
-
 ![Dashboard Errors](assets/dashboard_errors.png)
 
 **3. Детальные данные по задачам:**
-
 ![Dashboard Table](assets/dashboard_table.png)
+
+**4. Алертинг: письмо о падении пайплайна:**
+![Email Alert](assets/email_alert.png)
 
 ## 🎯 Зачем это
 
-Data Quality (Soda, Great Expectations) проверяет **сами данные**. Data Observability проверяет **процесс**: как долго выполняются задачи, какие ошибки возникают, сколько задач падает. Этот проект показывает, как из сырых логов Airflow получить полезные метрики и визуализировать их.
+Data Quality (Soda, Great Expectations) проверяет **сами данные**. Data Observability проверяет **процесс**: как долго выполняются задачи, какие ошибки возникают, сколько задач падает. Этот проект показывает, как из сырых логов Airflow получить полезные метрики, визуализировать их и **автоматически оповещать** ответственного при падении пайплайна.
 
 ## 🏗 Архитектура
 
@@ -27,7 +27,9 @@ graph LR
     Logs["Логи Airflow<br/>(*.log)"] -->|Парсинг| Parser["scripts/parse_airflow_logs.py"]
     Parser -->|Метрики| DB[("PostgreSQL<br/>airflow_logs_metrics")]
     DB -->|SQL Query| Dashboard["Streamlit App<br/>(Plotly)"]
+    DB -->|SQL Query| Alert["scripts/send_alert.py<br/>(Email)"]
     Dashboard -->|Визуализация| User["Пользователь"]
+    Alert -->|Email| User
     
     classDef log fill:#e1f5fe,stroke:#01579b,stroke-width:2px;
     classDef process fill:#fff3e0,stroke:#e65100,stroke-width:2px;
@@ -35,7 +37,7 @@ graph LR
     classDef app fill:#f3e5f5,stroke:#4a148c,stroke-width:2px;
     
     class Logs log;
-    class Parser process;
+    class Parser,Alert process;
     class DB db;
     class Dashboard app;
 ```
@@ -45,10 +47,12 @@ graph LR
 ```
 data-observability-demo/
 ├── scripts/
-│   └── parse_airflow_logs.py    # Парсер логов Airflow
+│   ├── parse_airflow_logs.py    # Парсер логов Airflow
+│   └── send_alert.py            # Алертинг (Email)
 ├── app/
 │   └── streamlit_app.py         # Дашборд (Streamlit + Plotly)
 ├── assets/                      # Скриншоты для README
+├── .env.example                 # Шаблон для SMTP-настроек
 ├── README.md
 └── requirements.txt
 ```
@@ -70,11 +74,28 @@ pip install streamlit plotly pandas sqlalchemy
 streamlit run app/streamlit_app.py
 ```
 
+### 4. Настройте алертинг (опционально)
+Создайте файл `.env` на основе `.env.example` и укажите свои SMTP-данные:
+```env
+SMTP_USER=your_email@mail.ru
+SMTP_PASSWORD=your_app_password
+SMTP_TO=your_email@mail.ru
+```
+
+Запустите скрипт алертинга:
+```bash
+pip install python-dotenv
+python scripts/send_alert.py
+```
+
+**Что делает скрипт:** Проверяет БД на наличие упавших задач за последние 24 часа. Если находит — отправляет письмо с деталями ошибки.
+
 ## 📊 Результаты
 
 - **Всего задач:** 42 (31 реальный лог + 11 синтетических для демонстрации).
 - **Уникальных DAG'ов:** 4 (`launch_library_contract_pipeline`, `ecommerce_pipeline`, `currency_rates_pipeline`, `raw_clean_analytics_pipeline`).
 - **Топ ошибок:** `name 'fields' is not defined` (9 раз), `502 Server Error` (1 раз), `TimeoutError` (синтетика).
+- **Алертинг:** Настроен на Email (SMTP Mail.ru). При падении пайплайна приходит письмо.
 
 ## 🔗 Связанные проекты
 
@@ -87,4 +108,3 @@ streamlit run app/streamlit_app.py
 - **GitHub:** [github.com/nconichtchenko-arch](https://github.com/nconichtchenko-arch)
 - **Email:** pavloni@mail.ru
 - **Формат работы:** удалённо
-
